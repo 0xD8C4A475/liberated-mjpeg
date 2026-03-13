@@ -111,6 +111,13 @@ const char *cmj_error_string(int error_code);
 void cmj_set_simd_enabled(int enabled);
 
 /*
+ * Enable or disable fast algorithms (AAN IDCT, lookup Huffman).
+ * Set to 0 to use naive O(N^4) IDCT and bit-by-bit Huffman.
+ * Default: enabled.
+ */
+void cmj_set_fast_enabled(int enabled);
+
+/*
  * Query detected CPU features. Returns a bitmask.
  */
 int cmj_get_cpu_features(void);

@@ -22,4 +22,7 @@ int cmj_detect_cpu_features(void);
 /* Global SIMD enable/disable flag */
 extern int cmj_simd_enabled;
 
+/* Global fast-algorithm enable/disable flag */
+extern int cmj_fast_enabled;
+
 #endif /* SIMD_DETECT_H */

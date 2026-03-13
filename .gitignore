@@ -10,7 +10,6 @@ build/
 *.so
 *.dylib
 *.ppm
-*.json
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -18,3 +17,11 @@ Makefile
 .vs/
 .vscode/
 *.user
+
+# Test data (large video files)
+testdata/
+
+# Temp files
+testdata/_*
+__pycache__/
+*.pyc

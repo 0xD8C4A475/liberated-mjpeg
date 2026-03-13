@@ -15,6 +15,7 @@
 #include "huffman_fast.h"
 #include "idct.h"
 #include "idct_fast.h"
+#include "simd_detect.h"
 #include "claude_mjpeg.h"
 #include <stdlib.h>
 #include <string.h>
@@ -53,19 +54,33 @@ int jpeg_decode(const uint8_t *data, size_t len, cmj_frame *out)
     if (ncomp != 1 && ncomp != 3)
         return CMJ_ERROR_UNSUPPORTED;
 
-    /* Step 2: Build fast Huffman decode tables */
+    /* Step 2: Build Huffman decode tables (fast or naive) */
+    int use_fast = cmj_fast_enabled;
+
     huff_fast_table dc_tables[JPEG_MAX_HUFF_TABLES];
     huff_fast_table ac_tables[JPEG_MAX_HUFF_TABLES];
+    huff_decode_table dc_tables_slow[JPEG_MAX_HUFF_TABLES];
+    huff_decode_table ac_tables_slow[JPEG_MAX_HUFF_TABLES];
     memset(dc_tables, 0, sizeof(dc_tables));
     memset(ac_tables, 0, sizeof(ac_tables));
+    memset(dc_tables_slow, 0, sizeof(dc_tables_slow));
+    memset(ac_tables_slow, 0, sizeof(ac_tables_slow));
 
     for (int i = 0; i < JPEG_MAX_HUFF_TABLES; i++) {
         if (scan.dc_huff_tables[i].valid) {
-            ret = huff_fast_build(&scan.dc_huff_tables[i], &dc_tables[i]);
+            if (use_fast) {
+                ret = huff_fast_build(&scan.dc_huff_tables[i], &dc_tables[i]);
+            } else {
+                ret = huff_build_table(&scan.dc_huff_tables[i], &dc_tables_slow[i]);
+            }
             if (ret != CMJ_OK) return ret;
         }
         if (scan.ac_huff_tables[i].valid) {
-            ret = huff_fast_build(&scan.ac_huff_tables[i], &ac_tables[i]);
+            if (use_fast) {
+                ret = huff_fast_build(&scan.ac_huff_tables[i], &ac_tables[i]);
+            } else {
+                ret = huff_build_table(&scan.ac_huff_tables[i], &ac_tables_slow[i]);
+            }
             if (ret != CMJ_OK) return ret;
         }
     }
@@ -135,8 +150,12 @@ int jpeg_decode(const uint8_t *data, size_t len, cmj_frame *out)
                         int block[64];
                         memset(block, 0, sizeof(block));
 
-                        /* Decode DC (fast path) */
-                        int dc = decode_dc_fast(&bs, &dc_tables[dc_id], prev_dc[c]);
+                        int dc;
+                        if (use_fast) {
+                            dc = decode_dc_fast(&bs, &dc_tables[dc_id], prev_dc[c]);
+                        } else {
+                            dc = decode_dc_coefficient(&bs, &dc_tables_slow[dc_id], prev_dc[c]);
+                        }
                         if (dc == INT_MIN) {
                             for (int cc = 0; cc < ncomp; cc++) free(comp_data[cc]);
                             return CMJ_ERROR_INVALID_DATA;
@@ -144,16 +163,22 @@ int jpeg_decode(const uint8_t *data, size_t len, cmj_frame *out)
                         prev_dc[c] = dc;
                         block[0] = dc;
 
-                        /* Decode AC (fast path) */
-                        ret = decode_ac_fast(&bs, &ac_tables[ac_id], block);
+                        if (use_fast) {
+                            ret = decode_ac_fast(&bs, &ac_tables[ac_id], block);
+                        } else {
+                            ret = decode_ac_coefficients(&bs, &ac_tables_slow[ac_id], block);
+                        }
                         if (ret != 0) {
                             for (int cc = 0; cc < ncomp; cc++) free(comp_data[cc]);
                             return CMJ_ERROR_INVALID_DATA;
                         }
 
-                        /* Fast IDCT + dequantize */
                         uint8_t pixels[64];
-                        idct_fast_dequant_block(block, scan.quant_tables[qt_id].table, pixels);
+                        if (use_fast) {
+                            idct_fast_dequant_block(block, scan.quant_tables[qt_id].table, pixels);
+                        } else {
+                            idct_dequant_block(block, scan.quant_tables[qt_id].table, pixels);
+                        }
 
                         /* Copy 8x8 block to component buffer */
                         int block_x = mcu_x * h_factor * 8 + bh * 8;

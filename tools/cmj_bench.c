@@ -290,8 +290,9 @@ static void write_json(const char *json_path, const char *input, const bench_res
 
 static void print_usage(const char *prog)
 {
-    fprintf(stderr, "Usage: %s <input.avi|input.jpg> [iterations] [--json output.json] [--no-ffmpeg] [--no-simd]\n", prog);
+    fprintf(stderr, "Usage: %s <input.avi|input.jpg> [iterations] [--json output.json] [--no-ffmpeg] [--no-simd] [--naive]\n", prog);
     fprintf(stderr, "\nBenchmark the claude-mjpeg decoder and compare with FFmpeg.\n");
+    fprintf(stderr, "  --naive      Use naive O(N^4) IDCT and bit-by-bit Huffman\n");
     fprintf(stderr, "  --no-simd    Disable SIMD optimizations (use pure C code)\n");
     fprintf(stderr, "  --no-ffmpeg  Skip FFmpeg comparison\n");
     fprintf(stderr, "Default iterations: 10\n");
@@ -309,6 +310,7 @@ int main(int argc, char **argv)
     const char *json_path = NULL;
     int skip_ffmpeg = 0;
     int no_simd = 0;
+    int naive = 0;
 
     /* Parse arguments */
     for (int i = 2; i < argc; i++) {
@@ -318,13 +320,18 @@ int main(int argc, char **argv)
             skip_ffmpeg = 1;
         } else if (strcmp(argv[i], "--no-simd") == 0) {
             no_simd = 1;
+        } else if (strcmp(argv[i], "--naive") == 0) {
+            naive = 1;
         } else {
             int n = atoi(argv[i]);
             if (n > 0) iterations = n;
         }
     }
 
-    if (no_simd) {
+    if (naive) {
+        cmj_set_fast_enabled(0);
+        cmj_set_simd_enabled(0);
+    } else if (no_simd) {
         cmj_set_simd_enabled(0);
     }
 
@@ -332,7 +339,7 @@ int main(int argc, char **argv)
     printf("======================\n");
     printf("Input: %s\n", input);
     printf("Iterations: %d\n", iterations);
-    printf("SIMD: %s\n", no_simd ? "disabled" : "enabled");
+    printf("Mode: %s\n", naive ? "naive" : (no_simd ? "optimized (no SIMD)" : "optimized + SIMD"));
 
     bench_result cmj_result = {0};
     int ret;

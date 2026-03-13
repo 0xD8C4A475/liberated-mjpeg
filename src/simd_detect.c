@@ -5,6 +5,7 @@
 #include "simd_detect.h"
 
 int cmj_simd_enabled = 1;
+int cmj_fast_enabled = 1;
 
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
 #include <intrin.h>

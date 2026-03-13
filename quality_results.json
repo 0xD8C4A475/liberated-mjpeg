@@ -1,0 +1,9 @@
+{
+  "input": "reference_frame.jpg",
+  "dimensions": "1920x1080",
+  "psnr_db": 24.49,
+  "ssim": 0.9789,
+  "max_pixel_diff": 255,
+  "mean_pixel_diff": 1.618,
+  "identical_channels_pct": 91.7
+}

@@ -1,0 +1,51 @@
+{
+  "resolutions": [
+    {
+      "label": "480p",
+      "file": "test_480p_q5.avi",
+      "frames": 150,
+      "data": {
+        "ffmpeg": { "fps": 810.8, "avg_ms": 1.233, "total_ms": 185.0, "frame_count": 150 },
+        "simd":  { "fps": 69.1, "avg_ms": 14.478, "total_ms": 2171.72, "mode": "simd" },
+        "optimized": { "fps": 71.5, "avg_ms": 13.979, "total_ms": 2096.85, "mode": "optimized" },
+        "naive": { "fps": 0.9, "avg_ms": 1130.003, "total_ms": 169500.52, "mode": "naive" }
+      }
+    },
+    {
+      "label": "720p",
+      "file": "test_720p_q2.avi",
+      "frames": 300,
+      "data": {
+        "ffmpeg": { "fps": 267.6, "avg_ms": 3.737, "total_ms": 1121.0, "frame_count": 300 },
+        "simd":  { "fps": 24.5, "avg_ms": 40.754, "total_ms": 12226.18, "mode": "simd" },
+        "optimized": { "fps": 24.5, "avg_ms": 40.759, "total_ms": 12227.57, "mode": "optimized" },
+        "naive": { "fps": 0.27, "avg_ms": 3703.0, "total_ms": 1110900.0, "mode": "naive" }
+      }
+    },
+    {
+      "label": "1080p",
+      "file": "test_1080p_q2.avi",
+      "frames": 300,
+      "data": {
+        "ffmpeg": { "fps": 134.3, "avg_ms": 7.446, "total_ms": 2233.0, "frame_count": 300 },
+        "simd":  { "fps": 10.7, "avg_ms": 93.188, "total_ms": 27956.54, "mode": "simd" },
+        "optimized": { "fps": 11.0, "avg_ms": 90.960, "total_ms": 27287.97, "mode": "optimized" },
+        "naive": { "fps": 0.13, "avg_ms": 7718.0, "total_ms": 2315400.0, "mode": "naive" }
+      }
+    }
+  ],
+  "jpeg": {
+    "label": "1080p JPEG",
+    "file": "reference_frame.jpg",
+    "data": {
+      "simd": { "fps": 10.7, "avg_ms": 93.298, "mode": "simd" },
+      "optimized": { "fps": 10.9, "avg_ms": 92.003, "mode": "optimized" },
+      "naive": { "fps": 0.13, "avg_ms": 7718.118, "mode": "naive" }
+    }
+  },
+  "system_info": {
+    "platform": "Windows 10 Pro x64",
+    "compiler": "MSVC 19.32 (VS2022)",
+    "cpu_note": "Single-threaded decode"
+  }
+}

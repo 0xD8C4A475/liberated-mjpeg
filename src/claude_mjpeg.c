@@ -86,6 +86,11 @@ void cmj_set_simd_enabled(int enabled)
     cmj_simd_enabled = enabled;
 }
 
+void cmj_set_fast_enabled(int enabled)
+{
+    cmj_fast_enabled = enabled;
+}
+
 int cmj_get_cpu_features(void)
 {
     return cmj_detect_cpu_features();
